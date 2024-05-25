@@ -118,7 +118,11 @@ class RiskParityPortfolio:
         """
         TODO: Complete Task 2 Below
         """
-
+        # 計算每個資產的逆波動率
+        inv_vols = 1 / self.volatilities[assets]
+        # 計算每個資產的權重，使得權重和為1
+        weights = inv_vols / inv_vols.sum()
+        self.portfolio_weights.loc[:, assets] = weights.values
         """
         TODO: Complete Task 2 Above
         """
