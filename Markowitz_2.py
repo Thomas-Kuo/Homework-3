@@ -75,17 +75,22 @@ class MyPortfolio:
         TODO: Complete Task 4 Below
         """
         
-        # 計算滾動窗口內的動量
+        # Calculate rolling momentum
         momentum = self.price[assets].pct_change(self.lookback).shift(1)
 
-        # 將動量正的資產權重設置為動量的大小，其他設置為0
+        # Set weights based on momentum
         for date in self.price.index:
             if date in momentum.index:
                 current_momentum = momentum.loc[date]
-                current_momentum = current_momentum[current_momentum > 0]
-                if not current_momentum.empty:
-                    weights = current_momentum / current_momentum.sum()
-                    self.portfolio_weights.loc[date, current_momentum.index] = weights
+                positive_momentum = current_momentum[current_momentum > 0]
+                if not positive_momentum.empty:
+                    weights = positive_momentum / positive_momentum.sum()
+                    self.portfolio_weights.loc[date, positive_momentum.index] = weights
+
+        # Normalize the weights daily to ensure no leverage
+        self.portfolio_weights = self.portfolio_weights.apply(lambda x: x / x.sum() if x.sum() > 0 else x, axis=1)
+
+
 
         """
         TODO: Complete Task 4 Above
