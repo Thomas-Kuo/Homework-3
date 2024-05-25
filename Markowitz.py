@@ -122,13 +122,14 @@ class RiskParityPortfolio:
         volatilities = df_returns[assets].std()
 
         # 計算每個資產的逆波動率
-        inv_vols = 1 / volatilities
+        inverse_volatility = 1 / volatilities
 
-        # 計算每個資產的權重，使得權重和為1
-        weights = inv_vols / inv_vols.sum()
+        # 計算每個資產的風險平價權重，使得權重和為1
+        normalized_weights = inverse_volatility / inverse_volatility.sum()
 
-        # 為每個日期設置相同的權重
-        self.portfolio_weights.loc[:, assets] = weights.values
+        # 將計算出來的權重分配給所有日期
+        for date in df.index:
+            self.portfolio_weights.loc[date, assets] = normalized_weights.values
         
         """
         TODO: Complete Task 2 Above

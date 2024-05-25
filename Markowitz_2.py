@@ -74,6 +74,18 @@ class MyPortfolio:
         """
         TODO: Complete Task 4 Below
         """
+        
+        # 計算滾動窗口內的動量
+        momentum = self.price[assets].pct_change(self.lookback).shift(1)
+
+        # 將動量正的資產權重設置為動量的大小，其他設置為0
+        for date in self.price.index:
+            if date in momentum.index:
+                current_momentum = momentum.loc[date]
+                current_momentum = current_momentum[current_momentum > 0]
+                if not current_momentum.empty:
+                    weights = current_momentum / current_momentum.sum()
+                    self.portfolio_weights.loc[date, current_momentum.index] = weights
 
         """
         TODO: Complete Task 4 Above
