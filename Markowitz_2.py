@@ -10,6 +10,9 @@ import gurobipy as gp
 import warnings
 import argparse
 
+from scipy.optimize import minimize
+
+
 """
 Project Setup
 """
@@ -74,23 +77,34 @@ class MyPortfolio:
         """
         TODO: Complete Task 4 Below
         """
-        
-        # Calculate rolling momentum
-        momentum = self.price[assets].pct_change(self.lookback).shift(1)
+        # Calculate expected returns and covariance matrix
+        returns = self.price[assets].pct_change().dropna()
+        mean_returns = returns.mean()
+        cov_matrix = returns.cov()
 
-        # Set weights based on momentum
-        for date in self.price.index:
-            if date in momentum.index:
-                current_momentum = momentum.loc[date]
-                positive_momentum = current_momentum[current_momentum > 0]
-                if not positive_momentum.empty:
-                    weights = positive_momentum / positive_momentum.sum()
-                    self.portfolio_weights.loc[date, positive_momentum.index] = weights
+        # Number of assets
+        num_assets = len(assets)
 
-        # Normalize the weights daily to ensure no leverage
-        self.portfolio_weights = self.portfolio_weights.apply(lambda x: x / x.sum() if x.sum() > 0 else x, axis=1)
+        # Define objective function for optimization (minimize negative Sharpe Ratio)
+        def neg_sharpe_ratio(weights):
+            portfolio_return = np.dot(weights, mean_returns)
+            portfolio_volatility = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
+            sharpe_ratio = portfolio_return / portfolio_volatility
+            return -sharpe_ratio  # Minimize negative Sharpe ratio
 
+        # Constraints (weights sum to 1 and bounds between 0 and 1)
+        constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
+        bounds = tuple((0, 1) for asset in range(num_assets))
+        initial_weights = np.array(num_assets * [1. / num_assets])
 
+        # Optimization to find the maximum Sharpe ratio
+        result = minimize(neg_sharpe_ratio, initial_weights, method='SLSQP', bounds=bounds, constraints=constraints)
+
+        if result.success:
+            optimal_weights = result.x
+            self.portfolio_weights.loc[returns.index, assets] = optimal_weights
+        else:
+            raise Exception('Optimization failed')
 
         """
         TODO: Complete Task 4 Above
