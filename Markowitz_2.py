@@ -77,34 +77,63 @@ class MyPortfolio:
         """
         TODO: Complete Task 4 Below
         """
-        # Calculate expected returns and covariance matrix
-        returns = self.price[assets].pct_change().dropna()
-        mean_returns = returns.mean()
-        cov_matrix = returns.cov()
+        # # Calculate expected returns and covariance matrix
+        # returns = self.price[assets].pct_change().dropna()
+        # mean_returns = returns.mean()
+        # cov_matrix = returns.cov()
 
-        # Number of assets
+        # # Number of assets
+        # num_assets = len(assets)
+
+        # # Define objective function for optimization (minimize negative Sharpe Ratio)
+        # def neg_sharpe_ratio(weights):
+        #     portfolio_return = np.dot(weights, mean_returns)
+        #     portfolio_volatility = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
+        #     sharpe_ratio = portfolio_return / portfolio_volatility
+        #     return -sharpe_ratio  # Minimize negative Sharpe ratio
+
+        # # Constraints (weights sum to 1 and bounds between 0 and 1)
+        # constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
+        # bounds = tuple((0, 1) for asset in range(num_assets))
+        # initial_weights = np.array(num_assets * [1. / num_assets])
+
+        # # Optimization to find the maximum Sharpe ratio
+        # result = minimize(neg_sharpe_ratio, initial_weights, method='SLSQP', bounds=bounds, constraints=constraints)
+
+        # if result.success:
+        #     optimal_weights = result.x
+        #     self.portfolio_weights.loc[returns.index, assets] = optimal_weights
+        # else:
+        #     raise Exception('Optimization failed')
+        
+        # Calculate expected returns and covariance matrix for the entire period
+        mean_returns = self.returns[assets].mean()
+        cov_matrix = self.returns[assets].cov()
         num_assets = len(assets)
 
-        # Define objective function for optimization (minimize negative Sharpe Ratio)
+        # Define the objective function for minimization (negative Sharpe Ratio)
         def neg_sharpe_ratio(weights):
             portfolio_return = np.dot(weights, mean_returns)
             portfolio_volatility = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
             sharpe_ratio = portfolio_return / portfolio_volatility
-            return -sharpe_ratio  # Minimize negative Sharpe ratio
+            return -sharpe_ratio  # We negate because we need to maximize the Sharpe Ratio
 
-        # Constraints (weights sum to 1 and bounds between 0 and 1)
+        # Constraints: weights sum to 1 and each weight is bounded between 0 and 1
         constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
-        bounds = tuple((0, 1) for asset in range(num_assets))
+        bounds = tuple((0, 1) for _ in range(num_assets))
         initial_weights = np.array(num_assets * [1. / num_assets])
 
-        # Optimization to find the maximum Sharpe ratio
+        # Optimization to maximize the Sharpe ratio
         result = minimize(neg_sharpe_ratio, initial_weights, method='SLSQP', bounds=bounds, constraints=constraints)
 
         if result.success:
             optimal_weights = result.x
-            self.portfolio_weights.loc[returns.index, assets] = optimal_weights
+            # Set the optimal weights for all dates (assuming stationary distribution)
+            self.portfolio_weights.loc[:, assets] = optimal_weights
         else:
-            raise Exception('Optimization failed')
+            raise Exception("Optimization failed. Reason:", result.message)
+
+        
 
         """
         TODO: Complete Task 4 Above
