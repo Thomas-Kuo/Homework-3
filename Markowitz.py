@@ -121,13 +121,13 @@ class RiskParityPortfolio:
         
         for i in range(self.lookback+1, len(df_returns)):
             # 計算每個資產的波動率
-            volatilities = df_returns.iloc[i-self.lookback:i][asset].std
+            volatilities = df_returns.iloc[i-self.lookback:i][assets].std()
 
             # 計算每個資產的逆波動率
             inverse_volatility = 1 / volatilities
 
             # 總和每個資產的逆波動率
-            sum_weights = inverse_volatility.sum()
+            sum_weights = inverse_volatility / inverse_volatility.sum()
 
             self.portfolio_weights.loc[df.index[i], assets] = sum_weights.values
         
