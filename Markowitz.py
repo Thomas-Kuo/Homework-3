@@ -126,10 +126,10 @@ class RiskParityPortfolio:
             # 計算每個資產的逆波動率
             inverse_volatility = 1 / volatilities
 
-            # 總和每個資產的逆波動率
-            sum_weights = inverse_volatility / inverse_volatility.sum()
+            # 計算權重：每個資產的逆波動率除以總和
+            weights = inverse_volatility / inverse_volatility.sum()
 
-            self.portfolio_weights.loc[df.index[i], assets] = sum_weights.values
+            self.portfolio_weights.loc[df.index[i], assets] = weights.values
         
         """
         TODO: Complete Task 2 Above
