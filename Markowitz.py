@@ -118,18 +118,18 @@ class RiskParityPortfolio:
         """
         TODO: Complete Task 2 Below
         """
-        # 計算每個資產的波動率
-        volatilities = df_returns[assets].std()
+        
+        for i in range(self.lookback+1, len(df_returns)):
+            # 計算每個資產的波動率
+            volatilities = df_returns.iloc[i-self.lookback:i][asset].std
 
-        # 計算每個資產的逆波動率
-        inverse_volatility = 1 / volatilities
+            # 計算每個資產的逆波動率
+            inverse_volatility = 1 / volatilities
 
-        # 計算每個資產的風險平價權重，使得權重和為1
-        normalized_weights = inverse_volatility / inverse_volatility.sum()
+            # 總和每個資產的逆波動率
+            sum_weights = inverse_volatility.sum()
 
-        # 將計算出來的權重分配給所有日期
-        for date in df.index:
-            self.portfolio_weights.loc[date, assets] = normalized_weights.values
+            self.portfolio_weights.loc[df.index[i], assets] = sum_weights.values
         
         """
         TODO: Complete Task 2 Above
